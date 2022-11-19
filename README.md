@@ -1,5 +1,5 @@
-# TypeScript webpack starter
-A simple seed for projects based on TypeScript and webpack
+# Breakout
+Course project for CSC 561
 ## Developer Guidance
 ### Building the Code
 1. [Download and install Node.js and npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
