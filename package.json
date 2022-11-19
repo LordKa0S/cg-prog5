@@ -1,0 +1,49 @@
+{
+  "name": "typescript-webpack-starter",
+  "version": "1.0.0",
+  "description": "A simple seed for projects based on TypeScript and webpack",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ./src/ts --ext .js,.jsx,.ts,.tsx --max-warnings=0",
+    "start": "webpack-dev-server --open --config webpack.dev.js",
+    "build": "webpack --config webpack.prod.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LordKa0S/typescript-webpack-starter.git"
+  },
+  "keywords": [],
+  "author": "Kaustubh Badrike",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/LordKa0S/typescript-webpack-starter/issues"
+  },
+  "homepage": "https://github.com/LordKa0S/typescript-webpack-starter#readme",
+  "devDependencies": {
+    "@types/lodash": "^4.14.187",
+    "@types/webpack-env": "^1.18.0",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
+    "clean-webpack-plugin": "^4.0.0",
+    "css-loader": "^5.2.7",
+    "eslint": "^7.32.0",
+    "fork-ts-checker-webpack-plugin": "^6.5.0",
+    "html-webpack-plugin": "^4.5.2",
+    "mini-css-extract-plugin": "^1.6.2",
+    "optimize-css-assets-webpack-plugin": "^6.0.1",
+    "sass": "^1.55.0",
+    "sass-loader": "^10.1.0",
+    "style-loader": "^2.0.0",
+    "terser-webpack-plugin": "^4.2.3",
+    "ts-loader": "^8.1.0",
+    "typescript": "^4.9.3",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.11.1",
+    "webpack-merge": "^5.8.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}
