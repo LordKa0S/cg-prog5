@@ -1,7 +1,7 @@
 {
-  "name": "typescript-webpack-starter",
+  "name": "breakout",
   "version": "1.0.0",
-  "description": "A simple seed for projects based on TypeScript and webpack",
+  "description": "Course project for CSC 561",
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -11,15 +11,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LordKa0S/typescript-webpack-starter.git"
+    "url": "git+https://github.com/LordKa0S/cg-prog5.git"
   },
   "keywords": [],
   "author": "Kaustubh Badrike",
-  "license": "Unlicense",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/LordKa0S/typescript-webpack-starter/issues"
+    "url": "https://github.com/LordKa0S/cg-prog5/issues"
   },
-  "homepage": "https://github.com/LordKa0S/typescript-webpack-starter#readme",
+  "homepage": "https://github.com/LordKa0S/cg-prog5#readme",
   "devDependencies": {
     "@types/lodash": "^4.14.187",
     "@types/webpack-env": "^1.18.0",
