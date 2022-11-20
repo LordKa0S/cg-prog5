@@ -20,6 +20,10 @@ module.exports = {
                 ],
                 exclude: /node_modules/,
             },
+            {
+                test: /\.html$/,
+                loader: 'html-loader'
+            }
         ],
     },
     resolve: {
@@ -28,7 +32,8 @@ module.exports = {
     plugins: [
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
-            title: 'TypeScript webpack starter',
+            title: 'Breakout',
+            template: 'src/html/index.html'
         }),
     ],
     output: {
