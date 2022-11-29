@@ -2,6 +2,18 @@ import { AmbientLight, BoxGeometry, DirectionalLight, Mesh, MeshPhongMaterial, M
 import '../scss/style.scss';
 
 const main = () => {
+    const shadowSize = 64;
+
+    const ballRadius = 1;
+
+    const wallColor = "lightsteelblue";
+    const wallBreadth = 2;
+    const wallHorizontalOffset = 24;
+
+    const paddleLength = 6;
+    const paddleBreadth = 1;
+    const paddleOffset = wallHorizontalOffset + (2 * wallBreadth);
+
     const scene = new Scene();
     const camera = new PerspectiveCamera(112.5, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 50;
@@ -14,7 +26,6 @@ const main = () => {
     const ambientLight = new AmbientLight(0x404040); // soft white light
     scene.add(ambientLight);
 
-    const shadowSize = 64;
 
     const directionalLightFront = new DirectionalLight(0xffffff, 0.5);
     directionalLightFront.position.set(0, 0, 25);
@@ -61,17 +72,13 @@ const main = () => {
     directionalLightTop.shadow.camera.bottom = - shadowSize;
     scene.add(directionalLightTop);
 
-    const paddleLength = 6;
-    const paddleBreadth = 1;
     const paddleGeometry = new BoxGeometry(paddleLength, paddleBreadth, paddleLength);
     const paddleMaterial = new MeshStandardMaterial({ color: 'coral' });
     const paddle = new Mesh(paddleGeometry, paddleMaterial);
     paddle.receiveShadow = true;
-    const paddleOffset = 28;
     paddle.position.setY(-paddleOffset);
     scene.add(paddle);
 
-    const ballRadius = 1;
     const ballGeometry = new SphereGeometry(ballRadius);
     const ballMaterial = new MeshPhongMaterial({ color: 'red' });
     const ball = new Mesh(ballGeometry, ballMaterial);
@@ -81,11 +88,8 @@ const main = () => {
     const initialDirection = new Vector3(0.1, 0.1, 0);
     const ballDirection = new Vector3(initialDirection.x, initialDirection.y, initialDirection.z);
 
-    const wallColor = "lightsteelblue"
-    const wallBreadth = 2;
-    const wallHorizontalOffset = 24;
     const wallDepth = (2 * wallHorizontalOffset) + wallBreadth;
-    const sideWallLength = 2 * (wallHorizontalOffset + (2 * wallBreadth));
+    const sideWallLength = 2 * (paddleOffset);
 
     const rightWallGeometry = new BoxGeometry(wallBreadth, sideWallLength, wallDepth);
     const rightWallMaterial = new MeshStandardMaterial({ color: wallColor });
