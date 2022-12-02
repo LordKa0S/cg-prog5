@@ -260,6 +260,7 @@ const main = () => {
         }
         paddleDirection.setLength(paddleSpeed);
         paddle.position.add(paddleDirection);
+
         renderer.render(scene, camera);
     };
 
