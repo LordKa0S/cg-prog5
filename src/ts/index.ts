@@ -91,8 +91,8 @@ const main = () => {
     scene.add(ball);
 
     const initialDirection = new Vector3(1, 1, 1);
-    initialDirection.setLength(minBallSpeed + (maxBallSpeed - minBallSpeed) * Math.random());
     const ballDirection = new Vector3(initialDirection.x, initialDirection.y, initialDirection.z);
+    ballDirection.setLength(minBallSpeed + (maxBallSpeed - minBallSpeed) * Math.random());
 
     const wallDepth = (2 * wallHorizontalOffset) + wallBreadth;
     const sideWallLength = 2 * (paddleOffset);
@@ -233,6 +233,7 @@ const main = () => {
             ball.position.y >= -ballBottomMarginOfError &&
             Math.abs(ball.position.x - paddle.position.x) <= (paddleLength / 2)) {
             ballDirection.setY(-ballDirection.y);
+            ballDirection.setLength(minBallSpeed + (maxBallSpeed - minBallSpeed) * Math.random());
         }
 
         const paddleDirection = new Vector3();
