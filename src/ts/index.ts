@@ -6,6 +6,11 @@ const main = () => {
 
     const ballRadius = 1;
 
+    const minBallSpeed = 0.2;
+    const maxBallSpeed = 0.4;
+
+    const paddleSpeed = 0.4;
+
     const wallColor = "lightsteelblue";
     const wallBreadth = 2;
     const wallHorizontalOffset = 24;
@@ -85,7 +90,8 @@ const main = () => {
     ball.castShadow = true;
     scene.add(ball);
 
-    const initialDirection = new Vector3(0.1, 0.1, 0);
+    const initialDirection = new Vector3(1, 1, 1);
+    initialDirection.setLength(minBallSpeed + (maxBallSpeed - minBallSpeed) * Math.random());
     const ballDirection = new Vector3(initialDirection.x, initialDirection.y, initialDirection.z);
 
     const wallDepth = (2 * wallHorizontalOffset) + wallBreadth;
@@ -128,34 +134,30 @@ const main = () => {
     scene.add(topWall);
 
     let angle = 0;
-    const keyHandler = (event: KeyboardEvent) => {
-        const changeBy = 0.5;
+    const arrowActive = {
+        up: false,
+        down: false,
+        left: false,
+        right: false,
+    };
+
+    const keyDownHandler = (event: KeyboardEvent) => {
         if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
-            let horizontalChange = changeBy;
             if (event.key === "ArrowLeft") {
-                horizontalChange *= -1;
+                arrowActive.left = true;
+            } else {
+                arrowActive.right = true;
             }
-            const newHorizontalPosition = paddle.position.x + horizontalChange;
-            const safeHorizontalOffset = wallHorizontalOffset - (wallBreadth / 2) - (paddleLength / 2);
-            if (Math.abs(newHorizontalPosition) > safeHorizontalOffset) {
-                return;
-            }
-            paddle.position.setX(newHorizontalPosition);
         }
         if (["ArrowUp", "ArrowDown"].includes(event.key)) {
-            let verticalChange = changeBy;
             if (event.key === "ArrowUp") {
-                verticalChange *= -1;
+                arrowActive.up = true;
+            } else {
+                arrowActive.down = true;
             }
-            const newVerticalPosition = paddle.position.z + verticalChange;
-            const safeVerticalOffset = wallHorizontalOffset - (wallBreadth / 2) - (paddleLength / 2);
-            if (Math.abs(newVerticalPosition) > safeVerticalOffset) {
-                return;
-            }
-            paddle.position.setZ(newVerticalPosition);
         }
         if (["n", "m"].includes(event.key)) {
-            let angleChange = changeBy * Math.PI / 10;
+            let angleChange = 0.5 * Math.PI / 10;
             if (event.key === "n") {
                 angleChange *= -1;
             }
@@ -193,12 +195,33 @@ const main = () => {
         }
     }
 
+    const keyUpHandler = (event: KeyboardEvent) => {
+        if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
+            if (event.key === "ArrowLeft") {
+                arrowActive.left = false;
+            } else {
+                arrowActive.right = false;
+            }
+        }
+        if (["ArrowUp", "ArrowDown"].includes(event.key)) {
+            if (event.key === "ArrowUp") {
+                arrowActive.up = false;
+            } else {
+                arrowActive.down = false;
+            }
+        }
+    };
+
     const animate = () => {
         requestAnimationFrame(animate);
+
         ball.position.add(ballDirection);
         const safeHorizontalOffset = wallHorizontalOffset - (wallBreadth / 2) - ballRadius;
         if (Math.abs(ball.position.x) >= safeHorizontalOffset) {
             ballDirection.setX(-ballDirection.x);
+        }
+        if (Math.abs(ball.position.z) >= safeHorizontalOffset) {
+            ballDirection.setZ(-ballDirection.z);
         }
         const ballSafeTopOffset = topWallOffset - wallBreadth - ballRadius;
         if (ball.position.y >= ballSafeTopOffset) {
@@ -211,11 +234,38 @@ const main = () => {
             Math.abs(ball.position.x - paddle.position.x) <= (paddleLength / 2)) {
             ballDirection.setY(-ballDirection.y);
         }
+
+        const paddleDirection = new Vector3();
+        if (arrowActive.left) {
+            paddleDirection.x -= 1;
+        }
+        if (arrowActive.right) {
+            paddleDirection.x += 1;
+        }
+        if (arrowActive.up) {
+            paddleDirection.z -= 1;
+        }
+        if (arrowActive.down) {
+            paddleDirection.z += 1;
+        }
+        paddleDirection.setLength(paddleSpeed);
+        const newPaddlePosition = paddle.position.clone();
+        newPaddlePosition.add(paddleDirection);
+        const safePaddleOffset = wallHorizontalOffset - (wallBreadth / 2) - (paddleLength / 2);
+        if (Math.abs(newPaddlePosition.x) > safePaddleOffset) {
+            paddleDirection.setX(0)
+        }
+        if (Math.abs(newPaddlePosition.z) > safePaddleOffset) {
+            paddleDirection.setZ(0);
+        }
+        paddleDirection.setLength(paddleSpeed);
+        paddle.position.add(paddleDirection);
         renderer.render(scene, camera);
     };
 
     animate();
-    window.addEventListener("keydown", keyHandler);
+    window.addEventListener("keydown", keyDownHandler);
+    window.addEventListener("keyup", keyUpHandler);
 };
 
 main();
