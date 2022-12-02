@@ -231,7 +231,8 @@ const main = () => {
         const ballSafeBottomOffset = ballBottomMarginOfError - (paddleBreadth / 2);
         if (ball.position.y <= -ballSafeBottomOffset &&
             ball.position.y >= -ballBottomMarginOfError &&
-            Math.abs(ball.position.x - paddle.position.x) <= (paddleLength / 2)) {
+            Math.abs(ball.position.x - paddle.position.x) <= (paddleLength / 2) &&
+            Math.abs(ball.position.z - paddle.position.z) <= (paddleLength / 2)) {
             ballDirection.setY(-ballDirection.y);
             ballDirection.setLength(minBallSpeed + (maxBallSpeed - minBallSpeed) * Math.random());
         }
