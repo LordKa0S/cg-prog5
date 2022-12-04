@@ -204,6 +204,7 @@ const main = (options: ProgramOptions) => {
     }
 
     let angle = 0;
+
     const arrowActive = {
         up: false,
         down: false,
