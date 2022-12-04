@@ -1,4 +1,4 @@
-import { AmbientLight, BoxGeometry, DirectionalLight, Mesh, MeshPhongMaterial, MeshStandardMaterial, PerspectiveCamera, Scene, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, Box3, BoxGeometry, Color, DirectionalLight, Mesh, MeshPhongMaterial, MeshStandardMaterial, MeshToonMaterial, PerspectiveCamera, Plane, Scene, Sphere, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import '../scss/style.scss';
 
 const main = () => {
@@ -16,7 +16,7 @@ const main = () => {
     const wallHorizontalOffset = 24;
 
     const paddleLength = 6;
-    const paddleBreadth = 1;
+    const paddleHeight = 1;
     const paddleOffset = wallHorizontalOffset + (2 * wallBreadth);
 
     const scene = new Scene();
@@ -77,7 +77,7 @@ const main = () => {
     directionalLightTop.shadow.camera.bottom = - shadowSize;
     scene.add(directionalLightTop);
 
-    const paddleGeometry = new BoxGeometry(paddleLength, paddleBreadth, paddleLength);
+    const paddleGeometry = new BoxGeometry(paddleLength, paddleHeight, paddleLength);
     const paddleMaterial = new MeshStandardMaterial({ color: 'coral' });
     const paddle = new Mesh(paddleGeometry, paddleMaterial);
     paddle.receiveShadow = true;
@@ -132,6 +132,43 @@ const main = () => {
     const topWallOffset = wallHorizontalOffset + wallBreadth;
     topWall.position.setY(topWallOffset);
     scene.add(topWall);
+
+    const brickHeight = paddleHeight * 2;
+    const numBrickHalfVertical = 2;
+    const numBrickHalfHorizontal = 3;
+
+    const brickLength = (wallHorizontalOffset - (wallBreadth / 2)) / numBrickHalfHorizontal;
+    const multipliers = [1, -1];
+
+    const bricks: Mesh<BoxGeometry, MeshToonMaterial>[] = [];
+
+    for (let brickColumn = 0; brickColumn < numBrickHalfHorizontal; brickColumn++) {
+        const absBrickX = (brickColumn + 0.5) * brickLength;
+        for (const mutliplierX of multipliers) {
+            const brickX = mutliplierX * absBrickX;
+            for (let brickDepthColumn = 0; brickDepthColumn < numBrickHalfHorizontal; brickDepthColumn++) {
+                const absBrickZ = (brickDepthColumn + 0.5) * brickLength;
+                for (const multiplierZ of multipliers) {
+                    const brickZ = multiplierZ * absBrickZ;
+                    for (let brickRow = 0; brickRow < numBrickHalfVertical; brickRow++) {
+                        const absBrickY = (brickRow + 0.5) * brickHeight;
+                        for (const multiplierY of multipliers) {
+                            const brickY = multiplierY * absBrickY;
+                            const brickGeometry = new BoxGeometry(brickLength, brickHeight, brickLength);
+                            const brickColor = new Color(0.25 + ((brickColumn + 1) * 0.5 / numBrickHalfHorizontal), 0.75 - (brickRow * 0.5 / numBrickHalfHorizontal), 0.25 + ((brickDepthColumn + 1) * 0.5 / numBrickHalfHorizontal));
+                            const brickMaterial = new MeshToonMaterial({ color: brickColor });
+                            const brick = new Mesh(brickGeometry, brickMaterial);
+                            brick.position.set(brickX, brickY, brickZ);
+                            brick.position.setY(brick.position.y + wallHorizontalOffset - wallBreadth * 3);
+                            scene.add(brick);
+                            bricks.push(brick);
+                            brickGeometry.boundingBox = new Box3().setFromObject(brick);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     let angle = 0;
     const arrowActive = {
@@ -228,13 +265,42 @@ const main = () => {
             ballDirection.setY(-ballDirection.y);
         }
         const ballBottomMarginOfError = paddleOffset - ballRadius;
-        const ballSafeBottomOffset = ballBottomMarginOfError - (paddleBreadth / 2);
+        const ballSafeBottomOffset = ballBottomMarginOfError - (paddleHeight / 2);
         if (ball.position.y <= -ballSafeBottomOffset &&
             ball.position.y >= -ballBottomMarginOfError &&
             Math.abs(ball.position.x - paddle.position.x) <= (paddleLength / 2) &&
             Math.abs(ball.position.z - paddle.position.z) <= (paddleLength / 2)) {
             ballDirection.setY(-ballDirection.y);
             ballDirection.setLength(minBallSpeed + (maxBallSpeed - minBallSpeed) * Math.random());
+        }
+
+        for (const brick of bricks) {
+            const ballSphere = new Sphere().set(ball.position, ballRadius);
+            if (brick.visible && brick.geometry.boundingBox?.intersectsSphere(ballSphere)) {
+                const brickMin = brick.geometry.boundingBox?.min;
+                const brickMax = brick.geometry.boundingBox?.max;
+                const brickBottomFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(0, 1, 0), brickMin);
+                const brickTopFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(0, 1, 0), brickMax);
+                if (brickBottomFace.intersectsSphere(ballSphere) || brickTopFace.intersectsSphere(ballSphere)) {
+                    ballDirection.setY(-ballDirection.y);
+                    brick.visible = false;
+                    break;
+                }
+                const brickLeftFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(1, 0, 0), brickMin);
+                const brickRightFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(1, 0, 0), brickMax);
+                if (brickLeftFace.intersectsSphere(ballSphere) || brickRightFace.intersectsSphere(ballSphere)) {
+                    ballDirection.setX(-ballDirection.x);
+                    brick.visible = false;
+                    break;
+                }
+                const brickRearFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(0, 0, 1), brickMin);
+                const brickFrontFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(0, 0, 1), brickMax);
+                if (brickFrontFace.intersectsSphere(ballSphere) || brickRearFace.intersectsSphere(ballSphere)) {
+                    ballDirection.setZ(-ballDirection.z);
+                    brick.visible = false;
+                    break;
+                }
+            }
         }
 
         const paddleDirection = new Vector3();
