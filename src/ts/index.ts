@@ -93,12 +93,23 @@ const main = (options: ProgramOptions) => {
     directionalLightTop.shadow.camera.bottom = - shadowSize;
     scene.add(directionalLightTop);
 
-    const paddleGeometry = new BoxGeometry(paddleLength, paddleHeight, paddleLength);
-    const paddleMaterial = new MeshStandardMaterial({ color: 'coral' });
-    const paddle = new Mesh(paddleGeometry, paddleMaterial);
-    paddle.receiveShadow = true;
-    paddle.position.setY(-paddleOffset);
-    scene.add(paddle);
+    const paddleOneGeometry = new BoxGeometry(paddleLength, paddleHeight, paddleLength);
+    const paddleOneMaterial = new MeshStandardMaterial({ color: 'coral' });
+    const paddleOne = new Mesh(paddleOneGeometry, paddleOneMaterial);
+    paddleOne.receiveShadow = true;
+    paddleOne.position.setY(-paddleOffset);
+    scene.add(paddleOne);
+
+    const paddleTwoGeometry = new BoxGeometry(paddleLength, paddleHeight, paddleLength);
+    const paddleTwoMaterial = new MeshStandardMaterial({ color: 'cyan' });
+    const paddleTwo = new Mesh(paddleTwoGeometry, paddleTwoMaterial);
+    paddleTwo.receiveShadow = true;
+    paddleTwo.position.setY(-paddleOffset);
+    paddleTwo.position.setX(paddleOne.position.x + paddleLength);
+    scene.add(paddleTwo);
+    if (!options.pair) {
+        paddleTwo.visible = false;
+    }
 
     const ballGeometry = new SphereGeometry(ballRadius);
     const ballMaterial = new MeshPhongMaterial({ color: 'red' });
@@ -187,7 +198,7 @@ const main = (options: ProgramOptions) => {
     }
 
     if (options.fp) {
-        camera.position.copy(paddle.position);
+        camera.position.copy(paddleOne.position);
         camera.lookAt(0, 0, 0);
         camera.up = new Vector3(0, 0, 1);
     }
@@ -198,6 +209,13 @@ const main = (options: ProgramOptions) => {
         down: false,
         left: false,
         right: false,
+    };
+
+    const wasdActive = {
+        w: false,
+        a: false,
+        s: false,
+        d: false,
     };
 
     const keyDownHandler = (event: KeyboardEvent) => {
@@ -214,6 +232,9 @@ const main = (options: ProgramOptions) => {
             } else {
                 arrowActive.down = true;
             }
+        }
+        if (["w", "a", "s", "d"].includes(event.key)) {
+            wasdActive[event.key as keyof typeof wasdActive] = true;
         }
         if (["n", "m"].includes(event.key)) {
             let angleChange = 0.5 * Math.PI / 10;
@@ -274,6 +295,9 @@ const main = (options: ProgramOptions) => {
                 arrowActive.down = false;
             }
         }
+        if (["w", "a", "s", "d"].includes(event.key)) {
+            wasdActive[event.key as keyof typeof wasdActive] = false;
+        }
     };
 
     const animate = () => {
@@ -295,8 +319,11 @@ const main = (options: ProgramOptions) => {
         const ballSafeBottomOffset = ballBottomMarginOfError - (paddleHeight / 2);
         if (ball.position.y <= -ballSafeBottomOffset &&
             ball.position.y >= -ballBottomMarginOfError &&
-            Math.abs(ball.position.x - paddle.position.x) <= (paddleLength / 2) &&
-            Math.abs(ball.position.z - paddle.position.z) <= (paddleLength / 2)) {
+            ((Math.abs(ball.position.x - paddleOne.position.x) <= (paddleLength / 2) &&
+                Math.abs(ball.position.z - paddleOne.position.z) <= (paddleLength / 2)) ||
+                !options.pair ||
+                (Math.abs(ball.position.x - paddleTwo.position.x) <= (paddleLength / 2) &&
+                    Math.abs(ball.position.z - paddleTwo.position.z) <= (paddleLength / 2)))) {
             ballDirection.setY(-ballDirection.y);
             ballDirection.setLength(minBallSpeed + (maxBallSpeed - minBallSpeed) * Math.random());
         }
@@ -330,46 +357,71 @@ const main = (options: ProgramOptions) => {
             }
         }
 
-        const paddleDirection = new Vector3();
+        const paddleOneDirection = new Vector3();
         if (arrowActive.left) {
-            paddleDirection.x -= 1;
+            paddleOneDirection.x -= 1;
         }
         if (arrowActive.right) {
-            paddleDirection.x += 1;
+            paddleOneDirection.x += 1;
         }
         if (arrowActive.up) {
-            paddleDirection.z -= 1;
+            paddleOneDirection.z -= 1;
         }
         if (arrowActive.down) {
-            paddleDirection.z += 1;
+            paddleOneDirection.z += 1;
         }
         if (options.fp) {
-            paddleDirection.z *= -1;
+            paddleOneDirection.z *= -1;
         }
-        paddleDirection.setLength(paddleSpeed);
-        const newPaddlePosition = paddle.position.clone();
-        newPaddlePosition.add(paddleDirection);
+        paddleOneDirection.setLength(paddleSpeed);
+        const newPaddleOnePosition = paddleOne.position.clone();
+        newPaddleOnePosition.add(paddleOneDirection);
         const safePaddleOffset = wallHorizontalOffset - (wallBreadth / 2) - (paddleLength / 2);
-        if (Math.abs(newPaddlePosition.x) > safePaddleOffset) {
-            paddleDirection.setX(0)
+        if (Math.abs(newPaddleOnePosition.x) > safePaddleOffset) {
+            paddleOneDirection.setX(0)
         }
-        if (Math.abs(newPaddlePosition.z) > safePaddleOffset) {
-            paddleDirection.setZ(0);
+        if (Math.abs(newPaddleOnePosition.z) > safePaddleOffset) {
+            paddleOneDirection.setZ(0);
         }
-        paddleDirection.setLength(paddleSpeed);
-        paddle.position.add(paddleDirection);
+        paddleOneDirection.setLength(paddleSpeed);
+        paddleOne.position.add(paddleOneDirection);
+
+        const paddleTwoDirection = new Vector3();
+        if (wasdActive.a) {
+            paddleTwoDirection.x -= 1;
+        }
+        if (wasdActive.d) {
+            paddleTwoDirection.x += 1;
+        }
+        if (wasdActive.w) {
+            paddleTwoDirection.z -= 1;
+        }
+        if (wasdActive.s) {
+            paddleTwoDirection.z += 1;
+        }
+        paddleTwoDirection.setLength(paddleSpeed);
+        const newPaddleTwoPosition = paddleTwo.position.clone();
+        newPaddleTwoPosition.add(paddleTwoDirection);
+        if (Math.abs(newPaddleTwoPosition.x) > safePaddleOffset) {
+            paddleTwoDirection.setX(0)
+        }
+        if (Math.abs(newPaddleTwoPosition.z) > safePaddleOffset) {
+            paddleTwoDirection.setZ(0);
+        }
+        paddleTwoDirection.setLength(paddleSpeed);
+        paddleTwo.position.add(paddleTwoDirection);
 
         if (options.demo) {
             if (Math.abs(ball.position.x) < safePaddleOffset) {
-                paddle.position.setX(ball.position.x);
+                paddleOne.position.setX(ball.position.x);
             }
             if (Math.abs(ball.position.z) < safePaddleOffset) {
-                paddle.position.setZ(ball.position.z);
+                paddleOne.position.setZ(ball.position.z);
             }
         }
 
         if (options.fp) {
-            camera.position.copy(paddle.position);
+            camera.position.copy(paddleOne.position);
             camera.lookAt(0, 0, 0);
         }
 
