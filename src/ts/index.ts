@@ -1,7 +1,19 @@
 import { AmbientLight, Box3, BoxGeometry, Color, DirectionalLight, Mesh, MeshPhongMaterial, MeshStandardMaterial, MeshToonMaterial, PerspectiveCamera, Plane, Scene, Sphere, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import '../scss/style.scss';
 
-const main = () => {
+interface ProgramOptions {
+    demo: boolean,
+}
+
+const getProgramOptions = (): ProgramOptions => {
+    const searchParams = new URLSearchParams(window.location.search);
+    return {
+        demo: searchParams.has('demo'),
+    };
+}
+
+
+const main = (options: ProgramOptions) => {
     const shadowSize = 64;
 
     const ballRadius = 1;
@@ -329,6 +341,15 @@ const main = () => {
         paddleDirection.setLength(paddleSpeed);
         paddle.position.add(paddleDirection);
 
+        if (options.demo) {
+            if (Math.abs(ball.position.x) < safePaddleOffset) {
+                paddle.position.setX(ball.position.x);
+            }
+            if (Math.abs(ball.position.z) < safePaddleOffset) {
+                paddle.position.setZ(ball.position.z);
+            }
+        }
+
         renderer.render(scene, camera);
     };
 
@@ -337,4 +358,5 @@ const main = () => {
     window.addEventListener("keyup", keyUpHandler);
 };
 
-main();
+const options = getProgramOptions();
+main(options);
