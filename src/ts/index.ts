@@ -3,12 +3,16 @@ import '../scss/style.scss';
 
 interface ProgramOptions {
     demo: boolean,
+    fp: boolean,
+    pair: boolean,
 }
 
 const getProgramOptions = (): ProgramOptions => {
     const searchParams = new URLSearchParams(window.location.search);
     return {
         demo: searchParams.has('demo'),
+        fp: searchParams.has('fp'),
+        pair: searchParams.has('pair'),
     };
 }
 
@@ -182,6 +186,12 @@ const main = (options: ProgramOptions) => {
         }
     }
 
+    if (options.fp) {
+        camera.position.copy(paddle.position);
+        camera.lookAt(0, 0, 0);
+        camera.up = new Vector3(0, 0, 1);
+    }
+
     let angle = 0;
     const arrowActive = {
         up: false,
@@ -217,10 +227,15 @@ const main = (options: ProgramOptions) => {
             if (angle > 2 * Math.PI) {
                 angle -= (2 * Math.PI);
             }
-            camera.position.z = 50 * Math.cos(angle);
-            camera.position.x = 50 * Math.sin(angle);
+            const newZ = 50 * Math.cos(angle);
+            const newX = 50 * Math.sin(angle);
+            if (options.fp) {
+                camera.up = new Vector3(newX, 0, newZ).normalize();
+            } else {
+                camera.position.z = newZ;
+                camera.position.x = newX;
+            }
             camera.lookAt(0, 0, 0);
-            console.log(angle / Math.PI);
             if (angle <= Math.PI / 4 || angle >= (7 * Math.PI / 4)) {
                 frontWall.visible = false;
             } else {
@@ -328,6 +343,9 @@ const main = (options: ProgramOptions) => {
         if (arrowActive.down) {
             paddleDirection.z += 1;
         }
+        if (options.fp) {
+            paddleDirection.z *= -1;
+        }
         paddleDirection.setLength(paddleSpeed);
         const newPaddlePosition = paddle.position.clone();
         newPaddlePosition.add(paddleDirection);
@@ -350,6 +368,11 @@ const main = (options: ProgramOptions) => {
             }
         }
 
+        if (options.fp) {
+            camera.position.copy(paddle.position);
+            camera.lookAt(0, 0, 0);
+        }
+
         renderer.render(scene, camera);
     };
 
@@ -359,4 +382,7 @@ const main = (options: ProgramOptions) => {
 };
 
 const options = getProgramOptions();
+if (options.pair) {
+    options.fp = false;
+}
 main(options);
