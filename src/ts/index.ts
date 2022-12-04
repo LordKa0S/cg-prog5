@@ -309,6 +309,12 @@ const main = (options: ProgramOptions) => {
     const animate = () => {
         requestAnimationFrame(animate);
 
+        if (ball.position.y <= - (paddleOffset + paddleHeight)) {
+            ball.position.set(0, 0, 0);
+            ballDirection.set(-1 + (2 * Math.random()), 1, -1 + (2 * Math.random()));
+            ballDirection.setLength(minBallSpeed + (maxBallSpeed - minBallSpeed) * Math.random());
+        }
+
         ball.position.add(ballDirection);
         const safeHorizontalOffset = wallHorizontalOffset - (wallBreadth / 2) - ballRadius;
         if (Math.abs(ball.position.x) >= safeHorizontalOffset) {
@@ -327,9 +333,9 @@ const main = (options: ProgramOptions) => {
             ball.position.y >= -ballBottomMarginOfError &&
             ((Math.abs(ball.position.x - paddleOne.position.x) <= (paddleLength / 2) &&
                 Math.abs(ball.position.z - paddleOne.position.z) <= (paddleLength / 2)) ||
-                !options.pair ||
-                (Math.abs(ball.position.x - paddleTwo.position.x) <= (paddleLength / 2) &&
-                    Math.abs(ball.position.z - paddleTwo.position.z) <= (paddleLength / 2)))) {
+                (options.pair &&
+                    (Math.abs(ball.position.x - paddleTwo.position.x) <= (paddleLength / 2) &&
+                        Math.abs(ball.position.z - paddleTwo.position.z) <= (paddleLength / 2))))) {
             ballDirection.setY(-ballDirection.y);
             ballDirection.setLength(minBallSpeed + (maxBallSpeed - minBallSpeed) * Math.random());
         }
