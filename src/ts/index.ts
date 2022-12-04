@@ -219,6 +219,11 @@ const main = (options: ProgramOptions) => {
     };
 
     const keyDownHandler = (event: KeyboardEvent) => {
+        const music = document.querySelector('audio');
+        if (music?.paused) {
+            music.volume = 0.25;
+            void music.play();
+        }
         if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
             if (event.key === "ArrowLeft") {
                 arrowActive.left = true;
