@@ -229,7 +229,7 @@ const main = (options: ProgramOptions) => {
     };
 
     const keyDownHandler = (event: KeyboardEvent) => {
-        const music = document.querySelector('audio#music') as HTMLAudioElement;
+        const music = document.querySelector('audio.music') as HTMLAudioElement;
         if (music?.paused) {
             music.volume = 0.25;
             if (options.music) {
@@ -354,7 +354,7 @@ const main = (options: ProgramOptions) => {
         }
 
         const playBrickSound = () => {
-            const sound = document.querySelector('audio#brick') as HTMLAudioElement;
+            const sound = document.querySelector('audio.brick') as HTMLAudioElement;
             const soundClone = sound.cloneNode(true) as HTMLAudioElement;
             void soundClone.play();
         }
@@ -474,4 +474,5 @@ const options = getProgramOptions();
 if (options.pair) {
     options.fp = false;
 }
+
 main(options);
