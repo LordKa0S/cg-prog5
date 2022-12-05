@@ -12,11 +12,18 @@ interface ProgramOptions {
 
 const getProgramOptions = (): ProgramOptions => {
     const searchParams = new URLSearchParams(window.location.search);
+    const demo = searchParams.has('demo');
+    let pair = (searchParams.get('pair') ?? 'true') === 'true';
+    const fp = (!pair || !searchParams.has('pair')) && searchParams.has('fp');
+    if (fp) {
+        pair = false;
+    }
+    const music = (searchParams.get('music') ?? 'true') === 'true';
     return {
-        demo: searchParams.has('demo'),
-        fp: searchParams.has('fp'),
-        pair: (searchParams.get('pair') ?? 'true') === 'true',
-        music: (searchParams.get('music') ?? 'true') === 'true',
+        demo,
+        fp,
+        pair,
+        music,
         level: 1,
         score: 0,
     };
@@ -285,8 +292,8 @@ const playLevel = (options: ProgramOptions): Promise<void> => {
             } else {
                 camera.position.z = newZ;
                 camera.position.x = newX;
+                camera.lookAt(0, 0, 0);
             }
-            camera.lookAt(0, 0, 0);
             if (angle <= Math.PI / 4 || angle >= (7 * Math.PI / 4)) {
                 frontWall.visible = false;
             } else {
@@ -497,7 +504,7 @@ const playLevel = (options: ProgramOptions): Promise<void> => {
 
         if (options.fp) {
             camera.position.copy(paddleOne.position);
-            camera.lookAt(0, 0, 0);
+            camera.lookAt(paddleOne.position.x, 0, paddleOne.position.z);
         }
 
         renderer.render(scene, camera);
@@ -510,10 +517,23 @@ const playLevel = (options: ProgramOptions): Promise<void> => {
     });
 };
 
+const toggleView = (options: ProgramOptions) => {
+    if (options.fp) {
+        window.location.href = '/';
+    } else {
+        window.location.href = '/?fp';
+    }
+};
+
 const main = async () => {
     const options = getProgramOptions();
-    if (options.pair) {
-        options.fp = false;
+
+    const fpvButton = document.querySelector('button.view') as HTMLButtonElement;
+    fpvButton.onclick = toggleView.bind(this, options);
+
+    if (options.fp) {
+        const p2Manual = document.querySelector('div.two');
+        p2Manual?.remove();
     }
 
     while (options.level <= 2) {
