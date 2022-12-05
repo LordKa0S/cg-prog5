@@ -12,38 +12,48 @@ body {
     text-transform: uppercase;
     color: whitesmoke;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    justify-content: space-evenly;
+
+    >div {
+        flex-basis: 33%;
+        display: flex;
+        z-index: 2;
+    }
 }
 
 canvas {
     position: absolute;
 }
 
-div.scoreboard {
-    display: flex;
-    z-index: 2;
+
+div.scoreboard,
+div.levelboard {
     height: 96px;
-    width: 196px;
-    justify-content: space-between;
+    justify-content: center;
+    gap: 24px;
     align-items: center;
     font-size: xx-large;
+}
+
+div.scoreboard {
     color: greenyellow;
 }
 
+div.levelboard {
+    height: 100%;
+    color: orangered;
+}
+
 div.manual {
-    position: absolute;
-    display: flex;
     flex-direction: column;
-    right: 24px;
     font-size: xx-large;
-    top: 40vh;
-    width: 360px;
-    z-index: 2;
+    justify-content: center;
 
     >div {
         display: flex;
         justify-content: center;
+        padding-left: 120px;
+        padding-right: 32px;
 
         &.one {
             color: coral;
