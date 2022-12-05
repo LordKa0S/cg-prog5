@@ -1,4 +1,4 @@
-import { AmbientLight, Box3, BoxGeometry, Color, DirectionalLight, EdgesGeometry, LineBasicMaterial, LineSegments, Mesh, MeshPhongMaterial, MeshStandardMaterial, MeshToonMaterial, PerspectiveCamera, Plane, Scene, Sphere, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, Box3, BoxGeometry, Color, DirectionalLight, EdgesGeometry, LineBasicMaterial, LineSegments, Mesh, MeshPhongMaterial, MeshStandardMaterial, MeshToonMaterial, PerspectiveCamera, Plane, PlaneGeometry, Scene, Sphere, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import '../scss/style.scss';
 
 interface ProgramOptions {
@@ -6,6 +6,8 @@ interface ProgramOptions {
     fp: boolean,
     pair: boolean,
     music: boolean,
+    level: number,
+    score: number,
 }
 
 const getProgramOptions = (): ProgramOptions => {
@@ -13,18 +15,19 @@ const getProgramOptions = (): ProgramOptions => {
     return {
         demo: searchParams.has('demo'),
         fp: searchParams.has('fp'),
-        pair: searchParams.has('pair'),
+        pair: (searchParams.get('pair') ?? 'true') === 'true',
         music: (searchParams.get('music') ?? 'true') === 'true',
+        level: 1,
+        score: 0,
     };
 }
 
-
-const main = (options: ProgramOptions) => {
+const playLevel = (options: ProgramOptions): Promise<void> => {
     const shadowSize = 64;
 
     const ballRadius = 1;
 
-    const minBallSpeed = 0.2;
+    const minBallSpeed = 0.4;
     const maxBallSpeed = 0.8;
 
     const paddleSpeed = 0.4;
@@ -33,7 +36,7 @@ const main = (options: ProgramOptions) => {
     const wallBreadth = 2;
     const wallHorizontalOffset = 24;
 
-    const paddleLength = 6;
+    const paddleLength = 6 / options.level;
     const paddleHeight = 1;
     const paddleOffset = wallHorizontalOffset + (2 * wallBreadth);
 
@@ -48,7 +51,6 @@ const main = (options: ProgramOptions) => {
 
     const ambientLight = new AmbientLight(0x404040); // soft white light
     scene.add(ambientLight);
-
 
     const directionalLightFront = new DirectionalLight(0xffffff, 0.5);
     directionalLightFront.position.set(0, 0, 25);
@@ -162,6 +164,15 @@ const main = (options: ProgramOptions) => {
     topWall.position.setY(topWallOffset);
     scene.add(topWall);
 
+    const floorGeometry = new PlaneGeometry(wallHorizontalOffset * 2 + wallBreadth, wallHorizontalOffset * 2 + wallBreadth);
+    const floorMaterial = new MeshStandardMaterial({ color: 'DarkSlateGray' });
+    const floor = new Mesh(floorGeometry, floorMaterial);
+    const floorOffset = paddleOffset + paddleHeight;
+    floor.receiveShadow = true;
+    floor.position.setY(-floorOffset);
+    floor.rotateX(-Math.PI / 2)
+    scene.add(floor);
+
     const brickHeight = paddleHeight * 2;
     const numBrickHalfVertical = 2;
     const numBrickHalfHorizontal = 3;
@@ -205,6 +216,8 @@ const main = (options: ProgramOptions) => {
             }
         }
     }
+
+    let bricksRemain = 8 * (numBrickHalfVertical + numBrickHalfHorizontal + numBrickHalfHorizontal);
 
     if (options.fp) {
         camera.position.copy(paddleOne.position);
@@ -317,13 +330,28 @@ const main = (options: ProgramOptions) => {
         }
     };
 
-    const animate = () => {
-        requestAnimationFrame(animate);
+    let score = options.score;
+
+    const updateScoreSpan = () => {
+        const scoreSpan = document.querySelector('span.score') as HTMLSpanElement;
+        scoreSpan.innerText = score.toString();
+    };
+
+    updateScoreSpan();
+
+    const animate = (resolveLevel: { (value: void | PromiseLike<void>): void; (): void; }) => {
+        if (bricksRemain > 0) {
+            requestAnimationFrame(animate.bind(this, resolveLevel));
+        } else {
+            resolveLevel();
+        }
 
         if (ball.position.y <= - (paddleOffset + paddleHeight)) {
             ball.position.set(0, 0, 0);
             ballDirection.set(-1 + (2 * Math.random()), 1, -1 + (2 * Math.random()));
             ballDirection.setLength(minBallSpeed + (maxBallSpeed - minBallSpeed) * Math.random());
+            score -= 2;
+            updateScoreSpan();
         }
 
         ball.position.add(ballDirection);
@@ -371,6 +399,9 @@ const main = (options: ProgramOptions) => {
                     mesh.visible = false;
                     edges.visible = false;
                     playBrickSound();
+                    ++score;
+                    updateScoreSpan();
+                    bricksRemain -= 1;
                     break;
                 }
                 const brickLeftFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(1, 0, 0), brickMin);
@@ -379,6 +410,9 @@ const main = (options: ProgramOptions) => {
                     ballDirection.setX(-ballDirection.x);
                     mesh.visible = false;
                     edges.visible = false;
+                    ++score;
+                    updateScoreSpan();
+                    bricksRemain -= 1;
                     playBrickSound();
                     break;
                 }
@@ -388,6 +422,9 @@ const main = (options: ProgramOptions) => {
                     ballDirection.setZ(-ballDirection.z);
                     mesh.visible = false;
                     edges.visible = false;
+                    ++score;
+                    updateScoreSpan();
+                    bricksRemain -= 1;
                     playBrickSound();
                     break;
                 }
@@ -465,14 +502,27 @@ const main = (options: ProgramOptions) => {
         renderer.render(scene, camera);
     };
 
-    animate();
     window.addEventListener("keydown", keyDownHandler);
     window.addEventListener("keyup", keyUpHandler);
+    return new Promise((resolve) => {
+        animate(resolve);
+    });
 };
 
-const options = getProgramOptions();
-if (options.pair) {
-    options.fp = false;
+const main = async () => {
+    const options = getProgramOptions();
+    if (options.pair) {
+        options.fp = false;
+    }
+
+    while (options.level <= 2) {
+        await playLevel(options);
+        options.level += 1;
+    }
+
+    const banner = document.querySelector('span.scoreboard>span') as HTMLSpanElement;
+    banner.innerText = 'YOU WON!';
 }
 
-main(options);
+void main();
+
