@@ -343,6 +343,7 @@ const playLevel = (options: ProgramOptions): Promise<void> => {
         if (bricksRemain > 0) {
             requestAnimationFrame(animate.bind(this, resolveLevel));
         } else {
+            options.score = score;
             resolveLevel();
         }
 
