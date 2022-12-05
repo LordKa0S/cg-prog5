@@ -1,4 +1,4 @@
-import { AmbientLight, Box3, BoxGeometry, Color, DirectionalLight, Mesh, MeshPhongMaterial, MeshStandardMaterial, MeshToonMaterial, PerspectiveCamera, Plane, Scene, Sphere, SphereGeometry, Vector3, WebGLRenderer } from 'three';
+import { AmbientLight, Box3, BoxGeometry, Color, DirectionalLight, EdgesGeometry, LineBasicMaterial, LineSegments, Mesh, MeshPhongMaterial, MeshStandardMaterial, MeshToonMaterial, PerspectiveCamera, Plane, Scene, Sphere, SphereGeometry, Vector3, WebGLRenderer } from 'three';
 import '../scss/style.scss';
 
 interface ProgramOptions {
@@ -23,7 +23,7 @@ const main = (options: ProgramOptions) => {
     const ballRadius = 1;
 
     const minBallSpeed = 0.2;
-    const maxBallSpeed = 0.4;
+    const maxBallSpeed = 0.8;
 
     const paddleSpeed = 0.4;
 
@@ -39,7 +39,7 @@ const main = (options: ProgramOptions) => {
     const camera = new PerspectiveCamera(112.5, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 50;
 
-    const renderer = new WebGLRenderer();
+    const renderer = new WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
@@ -167,7 +167,10 @@ const main = (options: ProgramOptions) => {
     const brickLength = (wallHorizontalOffset - (wallBreadth / 2)) / numBrickHalfHorizontal;
     const multipliers = [1, -1];
 
-    const bricks: Mesh<BoxGeometry, MeshToonMaterial>[] = [];
+    const bricks: {
+        mesh: Mesh<BoxGeometry, MeshToonMaterial>;
+        edges: LineSegments<EdgesGeometry<BoxGeometry>, LineBasicMaterial>;
+    }[] = [];
 
     for (let brickColumn = 0; brickColumn < numBrickHalfHorizontal; brickColumn++) {
         const absBrickX = (brickColumn + 0.5) * brickLength;
@@ -188,7 +191,11 @@ const main = (options: ProgramOptions) => {
                             brick.position.set(brickX, brickY, brickZ);
                             brick.position.setY(brick.position.y + wallHorizontalOffset - wallBreadth * 3);
                             scene.add(brick);
-                            bricks.push(brick);
+                            const brickEdgesGeometry = new EdgesGeometry(brickGeometry);
+                            const brickEdges = new LineSegments(brickEdgesGeometry, new LineBasicMaterial({ color: 0xffffff }));
+                            brickEdges.position.copy(brick.position);
+                            scene.add(brickEdges);
+                            bricks.push({ mesh: brick, edges: brickEdges });
                             brickGeometry.boundingBox = new Box3().setFromObject(brick);
                         }
                     }
@@ -220,7 +227,7 @@ const main = (options: ProgramOptions) => {
     };
 
     const keyDownHandler = (event: KeyboardEvent) => {
-        const music = document.querySelector('audio');
+        const music = document.querySelector('audio#music') as HTMLAudioElement;
         if (music?.paused) {
             music.volume = 0.25;
             void music.play();
@@ -328,42 +335,56 @@ const main = (options: ProgramOptions) => {
             ballDirection.setY(-ballDirection.y);
         }
         const ballBottomMarginOfError = paddleOffset - ballRadius;
+        const isBallDescending = ballDirection.y < 0;
         const ballSafeBottomOffset = ballBottomMarginOfError - (paddleHeight / 2);
-        if (ball.position.y <= -ballSafeBottomOffset &&
-            ball.position.y >= -ballBottomMarginOfError &&
-            ((Math.abs(ball.position.x - paddleOne.position.x) <= (paddleLength / 2) &&
-                Math.abs(ball.position.z - paddleOne.position.z) <= (paddleLength / 2)) ||
-                (options.pair &&
-                    (Math.abs(ball.position.x - paddleTwo.position.x) <= (paddleLength / 2) &&
-                        Math.abs(ball.position.z - paddleTwo.position.z) <= (paddleLength / 2))))) {
-            ballDirection.setY(-ballDirection.y);
+        const isBallAtPaddleHeight = ball.position.y <= -ballSafeBottomOffset && ball.position.y >= -ballBottomMarginOfError;
+        const isBallOnPaddleOne = Math.abs(ball.position.x - paddleOne.position.x) <= (paddleLength / 2) &&
+            Math.abs(ball.position.z - paddleOne.position.z) <= (paddleLength / 2);
+        const isBallOnPaddleTwo = Math.abs(ball.position.x - paddleTwo.position.x) <= (paddleLength / 2) &&
+            Math.abs(ball.position.z - paddleTwo.position.z) <= (paddleLength / 2);
+        if (isBallDescending && isBallAtPaddleHeight && (isBallOnPaddleOne || (options.pair && isBallOnPaddleTwo))) {
+            ballDirection.setY(-ballDirection.y / Math.abs(ballDirection.y));
+            ballDirection.setX(-1 + (2 * Math.random()))
+            ballDirection.setZ(-1 + (2 * Math.random()))
             ballDirection.setLength(minBallSpeed + (maxBallSpeed - minBallSpeed) * Math.random());
         }
 
-        for (const brick of bricks) {
+        const playBrickSound = () => {
+            const sound = document.querySelector('audio#brick') as HTMLAudioElement;
+            const soundClone = sound.cloneNode(true) as HTMLAudioElement;
+            void soundClone.play();
+        }
+
+        for (const { mesh, edges } of bricks) {
             const ballSphere = new Sphere().set(ball.position, ballRadius);
-            if (brick.visible && brick.geometry.boundingBox?.intersectsSphere(ballSphere)) {
-                const brickMin = brick.geometry.boundingBox?.min;
-                const brickMax = brick.geometry.boundingBox?.max;
+            if (mesh.visible && mesh.geometry.boundingBox?.intersectsSphere(ballSphere)) {
+                const brickMin = mesh.geometry.boundingBox?.min;
+                const brickMax = mesh.geometry.boundingBox?.max;
                 const brickBottomFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(0, 1, 0), brickMin);
                 const brickTopFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(0, 1, 0), brickMax);
                 if (brickBottomFace.intersectsSphere(ballSphere) || brickTopFace.intersectsSphere(ballSphere)) {
                     ballDirection.setY(-ballDirection.y);
-                    brick.visible = false;
+                    mesh.visible = false;
+                    edges.visible = false;
+                    playBrickSound();
                     break;
                 }
                 const brickLeftFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(1, 0, 0), brickMin);
                 const brickRightFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(1, 0, 0), brickMax);
                 if (brickLeftFace.intersectsSphere(ballSphere) || brickRightFace.intersectsSphere(ballSphere)) {
                     ballDirection.setX(-ballDirection.x);
-                    brick.visible = false;
+                    mesh.visible = false;
+                    edges.visible = false;
+                    playBrickSound();
                     break;
                 }
                 const brickRearFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(0, 0, 1), brickMin);
                 const brickFrontFace = new Plane().setFromNormalAndCoplanarPoint(new Vector3(0, 0, 1), brickMax);
                 if (brickFrontFace.intersectsSphere(ballSphere) || brickRearFace.intersectsSphere(ballSphere)) {
                     ballDirection.setZ(-ballDirection.z);
-                    brick.visible = false;
+                    mesh.visible = false;
+                    edges.visible = false;
+                    playBrickSound();
                     break;
                 }
             }
