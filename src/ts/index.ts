@@ -5,6 +5,7 @@ interface ProgramOptions {
     demo: boolean,
     fp: boolean,
     pair: boolean,
+    music: boolean,
 }
 
 const getProgramOptions = (): ProgramOptions => {
@@ -13,6 +14,7 @@ const getProgramOptions = (): ProgramOptions => {
         demo: searchParams.has('demo'),
         fp: searchParams.has('fp'),
         pair: searchParams.has('pair'),
+        music: (searchParams.get('music') ?? 'true') === 'true',
     };
 }
 
@@ -230,7 +232,9 @@ const main = (options: ProgramOptions) => {
         const music = document.querySelector('audio#music') as HTMLAudioElement;
         if (music?.paused) {
             music.volume = 0.25;
-            void music.play();
+            if (options.music) {
+                void music.play();
+            }
         }
         if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
             if (event.key === "ArrowLeft") {
