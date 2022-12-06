@@ -34,8 +34,8 @@ const playLevel = (options: ProgramOptions): Promise<void> => {
 
     const ballRadius = 1;
 
-    const minBallSpeed = 0.4;
-    const maxBallSpeed = 0.8;
+    const minBallSpeed = 0.2;
+    const maxBallSpeed = 0.6;
 
     const paddleSpeed = 0.4;
 
@@ -224,7 +224,7 @@ const playLevel = (options: ProgramOptions): Promise<void> => {
         }
     }
 
-    let bricksRemain = 8 * (numBrickHalfVertical + numBrickHalfHorizontal + numBrickHalfHorizontal);
+    let bricksRemain = 8 * (numBrickHalfVertical * numBrickHalfHorizontal * numBrickHalfHorizontal);
 
     if (options.fp) {
         camera.position.copy(paddleOne.position);
