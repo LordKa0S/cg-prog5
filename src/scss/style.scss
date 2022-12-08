@@ -25,6 +25,15 @@ canvas {
     position: absolute;
 }
 
+div.center {
+    flex-direction: column;
+    justify-content: space-between;
+
+    div.scoreboard {
+        display: flex;
+    }
+}
+
 
 div.scoreboard,
 div.levelboard {
@@ -42,6 +51,16 @@ div.scoreboard {
 div.levelboard {
     height: 100%;
     color: orangered;
+}
+
+div.attributions {
+    ul {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: x-small;
+        list-style-type: none;
+    }
 }
 
 div.manual {
