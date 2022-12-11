@@ -42,7 +42,7 @@ const playLevel = (options: ProgramOptions): Promise<void> => {
     const wallBreadth = 2;
     const wallHorizontalOffset = 24;
 
-    const paddleLength = 6 / options.level;
+    const paddleLength = 10 / options.level;
     const paddleHeight = 1;
     const paddleOffset = wallHorizontalOffset + (2 * wallBreadth);
 
