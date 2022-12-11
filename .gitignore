@@ -112,3 +112,6 @@ dist
 
 # Local History for Visual Studio Code
 .history/
+
+src/js/
+src/css/

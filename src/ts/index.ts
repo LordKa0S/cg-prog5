@@ -1,5 +1,4 @@
 import { AmbientLight, Box3, BoxGeometry, Color, DirectionalLight, EdgesGeometry, LineBasicMaterial, LineSegments, Mesh, MeshPhongMaterial, MeshStandardMaterial, MeshToonMaterial, PerspectiveCamera, Plane, PlaneGeometry, Scene, Sphere, SphereGeometry, Vector3, WebGLRenderer } from 'three';
-import '../scss/style.scss';
 
 interface ProgramOptions {
     demo: boolean,
