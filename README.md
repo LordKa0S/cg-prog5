@@ -6,7 +6,7 @@ Course project for CSC 561
 2. In the root of your clone, run
 ```shell
 npm ci
-npm run build # creates a new build in the dist folder
+npm run build # creates a new build in the src folder
 ```
 Additionally, the following scripts are available:
 ```shell
