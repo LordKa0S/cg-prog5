@@ -526,6 +526,11 @@ const toggleView = (options: ProgramOptions) => {
     window.location.search = searchParams.toString();
 };
 
+const updateLevelSpan = (level: number) => {
+    const levelSpan = document.querySelector('span.level') as HTMLSpanElement;
+    levelSpan.innerText = level.toString();
+};
+
 const main = async () => {
     const options = getProgramOptions();
 
@@ -538,6 +543,7 @@ const main = async () => {
     }
 
     while (options.level <= 2) {
+        updateLevelSpan(options.level);
         await playLevel(options);
         options.level += 1;
     }
