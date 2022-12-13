@@ -11,5 +11,4 @@ npm run build # creates a new build in the dist folder
 Additionally, the following scripts are available:
 ```shell
 npm run lint # checks for linting errors
-npm run start # starts a development server with HMR enabled
 ```
