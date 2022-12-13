@@ -517,11 +517,13 @@ const playLevel = (options: ProgramOptions): Promise<void> => {
 };
 
 const toggleView = (options: ProgramOptions) => {
+    const searchParams = new URLSearchParams(window.location.search);
     if (options.fp) {
-        window.location.href = '/';
+        searchParams.delete('fp');
     } else {
-        window.location.href = '/?fp';
+        searchParams.set('fp', '');
     }
+    window.location.search = searchParams.toString();
 };
 
 const main = async () => {
