@@ -548,7 +548,7 @@ const main = async () => {
         options.level += 1;
     }
 
-    const banner = document.querySelector('span.scoreboard>span') as HTMLSpanElement;
+    const banner = document.querySelector('div.scoreboard>span') as HTMLSpanElement;
     banner.innerText = 'YOU WON!';
 }
 
